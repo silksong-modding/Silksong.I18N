@@ -1,13 +1,169 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Resources;
+using System.Text;
 using BepInEx;
+using BepInEx.Bootstrap;
+using HarmonyLib;
+using Newtonsoft.Json;
+using TeamCherry.Localization;
 
 namespace Silksong.I18N;
 
-[BepInAutoPlugin(id: "org.silksong-modding.i18n")]
-public partial class I18NPlugin : BaseUnityPlugin
+[BepInPlugin("org.silksong-modding.i18n", "I18N", "0.1.0")]
+sealed partial class I18NPlugin : BaseUnityPlugin
 {
-    private void Awake()
+    void Awake()
     {
-        // Put your initialization logic here
-        Logger.LogInfo($"Plugin {Name} ({Id}) has loaded!");
+        I18NPlugin.Instance = this;
+        var harmony = new Harmony("SilksongModding.Localization");
+        var sceneLoaded = false;
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded += (_, _) =>
+        {
+            if (!sceneLoaded)
+            {
+                sceneLoaded = true;
+                this.PatchOnSceneLoad(harmony);
+            }
+        };
+    }
+
+    static I18NPlugin? Instance = null;
+
+    void PatchOnSceneLoad(Harmony harmony)
+    {
+        harmony.Patch(
+            original: AccessTools.Method(typeof(Language), nameof(Language.DoSwitch)),
+            postfix: new HarmonyMethod(typeof(I18NPlugin), nameof(I18NPlugin.PostfixSwitchLanguage))
+        );
+
+        Language.SwitchLanguage(Language.CurrentLanguage());
+    }
+
+    static void PostfixSwitchLanguage()
+    {
+        var plugin = I18NPlugin.Instance;
+        if (plugin)
+        {
+            plugin.LoadAllModSheets();
+        }
+    }
+
+    void LoadAllModSheets()
+    {
+        var lang = Language._currentLanguage;
+        foreach (var (id, info) in Chainloader.PluginInfos)
+        {
+            var mod = info.Instance;
+            if (!mod)
+            {
+                continue;
+            }
+
+            var modAsm = mod.GetType().Assembly;
+
+            var modDir = Path.GetDirectoryName(modAsm.Location);
+            if (!Directory.Exists(modDir))
+            {
+                continue;
+            }
+
+            var isPluginsDir =
+                string.Compare(
+                    Path.GetFullPath(modDir).TrimEnd(Path.DirectorySeparatorChar),
+                    Path.GetFullPath(Paths.PluginPath).TrimEnd(Path.DirectorySeparatorChar),
+                    StringComparison.InvariantCultureIgnoreCase
+                ) == 0;
+
+            if (isPluginsDir)
+            {
+                this.Logger.LogWarning($"mod {id} installed directly in plugins dir");
+                continue;
+            }
+
+            Dictionary<string, string>? fallbackSheet = null;
+            var langAttr = modAsm.GetCustomAttribute<NeutralResourcesLanguageAttribute>();
+            if (langAttr is not null)
+            {
+                var fallbackLang = langAttr.CultureName;
+                fallbackSheet = this.LoadModSheet(modDir, fallbackLang);
+                if (fallbackSheet is not null)
+                {
+                    this.Logger.LogDebug(
+                        $"loaded fallback sheet in language {fallbackLang} for mod {id}"
+                    );
+                }
+            }
+
+            var sheet = this.LoadModSheet(modDir, lang.ToString().ToLower(), fallbackSheet);
+            if (sheet is not null)
+            {
+                Language._currentEntrySheets[$"Mods.{id}"] = sheet;
+                this.Logger.LogDebug($"loaded sheet in language {lang} for mod {id}");
+            }
+        }
+    }
+
+    Dictionary<string, string>? LoadModSheet(
+        string modDir,
+        string lang,
+        Dictionary<string, string>? fallback = null
+    )
+    {
+        var opts = new EnumerationOptions();
+        opts.MatchCasing = MatchCasing.CaseInsensitive;
+
+        var hit = false;
+        var modSheet = fallback ?? new Dictionary<string, string>();
+
+        try
+        {
+            var modSheets = Directory
+                .EnumerateDirectories(modDir, "languages", opts)
+                .SelectMany(dir => Directory.EnumerateFiles(dir, $"{lang}.json", opts))
+                .OrderBy(p => p)
+                .Select(this.ReadSheetFile)
+                .OfType<Dictionary<string, string>>();
+
+            foreach (var sheet in modSheets)
+            {
+                hit = true;
+                foreach (var (k, v) in sheet)
+                {
+                    modSheet[k] = v;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            this.Logger.LogWarning($"unable to load mod sheets: {modDir}\n{ex}");
+            return null;
+        }
+
+        if (hit)
+        {
+            return modSheet;
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+    Dictionary<string, string>? ReadSheetFile(string path)
+    {
+        try
+        {
+            using var s = new StreamReader(File.OpenRead(path), Encoding.UTF8, false);
+            return JsonConvert.DeserializeObject<Dictionary<string, string>>(s.ReadToEnd());
+        }
+        catch (Exception ex)
+        {
+            this.Logger.LogWarning($"unable to read language file: {path}\n{ex}");
+            return null;
+        }
     }
 }
