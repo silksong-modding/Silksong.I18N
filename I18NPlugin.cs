@@ -72,8 +72,8 @@ sealed partial class I18NPlugin : BaseUnityPlugin
             var langAttr = modAsm.GetCustomAttribute<NeutralResourcesLanguageAttribute>();
             if (langAttr is not null)
             {
-                var fallbackLang = langAttr.CultureName;
-                fallbackSheet = this.LoadModSheet(modDir, fallbackLang);
+                var fallbackLang = langAttr.CultureName.ToUpper();
+                fallbackSheet = this.LoadModSheet(modDir, fallbackLang.ToLower());
                 if (fallbackSheet is not null)
                 {
                     this.Logger.LogDebug(
@@ -114,6 +114,13 @@ sealed partial class I18NPlugin : BaseUnityPlugin
 
             foreach (var sheet in modSheets)
             {
+                if (hit)
+                {
+                    this.Logger.LogWarning(
+                        $"multiple casings found for language {lang.ToUpper()} in: {modDir}"
+                    );
+                }
+
                 hit = true;
                 foreach (var (k, v) in sheet)
                 {
