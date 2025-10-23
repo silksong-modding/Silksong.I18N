@@ -5,12 +5,12 @@ A Hollow Knight: Silksong mod to enable developers to provide translated text ha
 ## Developer Usage
 
 This plugin does **not** need to be added as a reference, but **should** be specified as a `BepinDependency`.
-It obtains translations by scanning plugin directories for `language` folders.
+It obtains translations by scanning plugin directories for `Language` folders.
 
 ### Creating Sheets
-Create a directory named `language` inside the folder of your plugin.
+Create a directory named `Language` inside the folder of your plugin.
 
-Inside the `language` directory, create a json file named with the two-character code for the language you want to provide text for.
+Inside the `Language` directory, create a json file named with the two-character code for the language you want to provide text for.
 #### Example
 In file `en.json`
 ```json
