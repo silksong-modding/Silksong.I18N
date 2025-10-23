@@ -17,7 +17,7 @@ namespace Silksong.I18N;
 [BepInAutoPlugin(id: "org.silksong-modding.i18n")]
 public partial class I18NPlugin : BaseUnityPlugin
 {
-    internal static new ManualLogSource Logger;
+    internal new static ManualLogSource Logger;
     private Harmony? _harmony;
 
     public static Dictionary<string, ModLanguageInfo> LanguageInfos = [];
@@ -85,13 +85,17 @@ public partial class I18NPlugin : BaseUnityPlugin
                     }
                     catch (Exception e)
                     {
-                        Logger.LogError($"Failed to parse from {id}: {e.Message}");
+                        Logger.LogError($"Failed to parse '{languageFileName}' from '{id}': {e.Message}");
                         continue;
                     }
                     if (String.Equals(Path.GetFileNameWithoutExtension(languageFileName), fallbackLanguage, StringComparison.OrdinalIgnoreCase))
                         fallbackFile = languageFileName;
                     languageFiles.Add(languageFileName);
                 }
+
+                if (fallbackLanguage != null && fallbackFile == null) 
+                    Logger.LogWarning($"'{id}' specifies fallback language, but corresponding language file was not found");
+                
                 LanguageInfos.Add(id,
                     new ModLanguageInfo(languageDirectory,
                         languageFiles, fallbackFile));
