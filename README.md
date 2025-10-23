@@ -37,6 +37,8 @@ Sub-sheets will be named `Mod.me.mymod/<sub-sheet name>`.
 
 #### Example
 ```csharp
+using BepInEx;
+using TeamCherry.Localization;
 
 [BepinAutoPlugin(id: "me.mymod")]
 [BepInDependency(DependencyGUID: "org.silksong-modding.i18n")]
@@ -46,8 +48,13 @@ public partial class MyMod : BaseUnityPlugin
     private void ExampleFunction()
     {
         //...
-        var helloWorld = TeamCherry.Localization.Language.Get("EXAMPLE", $"Mod.{Id}");
-        var optionStr = TeamCherry.Localization.Language.Get("OPT_1", $"Mod.{Id}/OptionsSheet");
+        var localisedString = new LocalisedString {
+            Sheet = "EXAMPLE",
+            Key = $"Mod.{Id}"
+        };
+        var directString = Language.Get("EXAMPLE", $"Mod.{Id}");
+        
+        var directSubSheetString = Language.Get("OPT_1", $"Mod.{Id}/OptionsSheet");
         //...
     }
     //...
