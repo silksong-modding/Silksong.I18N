@@ -76,8 +76,16 @@ public partial class I18NPlugin : BaseUnityPlugin
 
             var serializer = new JsonSerializer();
 
+            bool hasLanguageDir = false;
+
             foreach (var languageDirectory in Directory.EnumerateDirectories(pluginDir, "language", enumerationOptions))
             {
+                if (hasLanguageDir)
+                {
+                    Logger.LogError($"'{pluginId}' provides multiple language directories (check directory name casing)");
+                    break;
+                }
+                    
                 var languageInfo = new ModLanguageInfo();
                 foreach (var languageFile in Directory.EnumerateFiles(languageDirectory, "*.json", enumerationOptions))
                 {
@@ -99,6 +107,10 @@ public partial class I18NPlugin : BaseUnityPlugin
                             languageInfo.Data.Add(languageCode, languageData);
                         }
                     }
+                    catch (ArgumentException)
+                    {
+                        Logger.LogError($"'{pluginId}' provides multiple files for language {languageName}, (check file name casing)");
+                    }
                     catch (Exception e)
                     {
                         Logger.LogError($"Failed to parse '{Path.GetFileName(languageFile)}' from '{pluginId}': {e.Message}");
@@ -115,8 +127,7 @@ public partial class I18NPlugin : BaseUnityPlugin
                 }
 
                 LanguageData.Add(pluginId, languageInfo);
-
-                break;
+                hasLanguageDir = true;
             }
         }
     }
