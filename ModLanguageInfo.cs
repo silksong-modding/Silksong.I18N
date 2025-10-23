@@ -1,10 +1,10 @@
 using System.Collections.Generic;
+using TeamCherry.Localization;
 
 namespace Silksong.I18N;
 
-public class ModLanguageInfo(string languageDirectory, List<string> languageFiles, string? fallbackFile)
+public class ModLanguageInfo
 {
-    public readonly string LanguageDirectory = languageDirectory;
-    public readonly List<string> LanguageFiles = languageFiles;
-    public readonly string? FallbackFile = fallbackFile;
+    public Dictionary<LanguageCode, ModLanguageData> Data = new();
+    public LanguageCode FallbackLanguageCode = LanguageCode.N;
 }

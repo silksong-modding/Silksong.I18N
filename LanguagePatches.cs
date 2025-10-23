@@ -1,9 +1,6 @@
-using System;
-using System.IO;
-using System.Linq;
 using HarmonyLib;
-using Newtonsoft.Json;
 using TeamCherry.Localization;
+using System.Collections.Generic;
 
 namespace Silksong.I18N;
 
@@ -13,36 +10,48 @@ public class LanguagePatches
     [HarmonyPostfix]
     public static void InsertModdedSheets(LanguageCode newLang)
     {
-        var newLangString = newLang.ToString();
-        var serializer = new JsonSerializer();
-        foreach ((string modId, ModLanguageInfo languageInfo) in I18NPlugin.LanguageInfos)
+        foreach (var (modId, languageInfo) in I18NPlugin.LanguageData)
         {
-            I18NPlugin.Logger.LogDebug($"Inserting sheets for '{modId}'");
-            string? targetLanguageFile = languageInfo.LanguageFiles
-                .FirstOrDefault(language =>
-                    String.Equals(Path.GetFileNameWithoutExtension(language), newLangString,
-                        StringComparison.InvariantCultureIgnoreCase));
+            var language = languageInfo.Data.GetValueOrDefault(newLang);
 
-            targetLanguageFile ??= languageInfo.FallbackFile;
-
-            if (targetLanguageFile == null)
-                continue;
-            using (StreamReader file = File.OpenText(Path.Combine(languageInfo.LanguageDirectory, targetLanguageFile)))
+            var mainSheet = language?.MainSheet ?? new Dictionary<string, string>();
+            var subSheets = language?.SubSheets ?? new Dictionary<string, Dictionary<string, string>>();
+            var fallbackCode = languageInfo.FallbackLanguageCode;
+            if (fallbackCode != LanguageCode.N && fallbackCode != newLang)
             {
-                var languageData = (ModLanguageData?)serializer.Deserialize(file, typeof(ModLanguageData));
-                if (languageData == null)
-                    continue;
-
-                if (languageData.MainSheet != null)
-                    Language._currentEntrySheets.Add($"Mod.{modId}", languageData.MainSheet);
-
-                if (languageData.SubSheets == null)
-                    continue;
-
-                foreach (var (subsheetName, values) in languageData.SubSheets)
+                var fallbackLanguage = languageInfo.Data[fallbackCode];
+                if (fallbackLanguage.MainSheet != null)
                 {
-                    Language._currentEntrySheets.Add($"Mod.{modId}/{subsheetName}", values);
+                    foreach (var (key, value) in fallbackLanguage.MainSheet)
+                    {
+                        mainSheet.TryAdd(key, value);
+                    }
                 }
+
+                if (fallbackLanguage.SubSheets != null)
+                {
+                    foreach (var (subSheetTitle, fallbackSubSheet) in fallbackLanguage.SubSheets)
+                    {
+                        var subSheet = subSheets.GetValueOrDefault(subSheetTitle);
+                        if (subSheet == null)
+                        {
+                            subSheets.Add(subSheetTitle, fallbackSubSheet);
+                        }
+                        else
+                        {
+                            foreach (var (key, value) in fallbackSubSheet)
+                            {
+                                subSheet.TryAdd(key, value);
+                            }
+                        }
+                    }
+                }
+
+            }
+            Language._currentEntrySheets.Add($"Mod.{modId}", mainSheet);
+            foreach (var (sheetTitle, subSheet) in subSheets)
+            {
+                Language._currentEntrySheets.Add($"Mod.{modId}/{sheetTitle}", subSheet);
             }
         }
     }

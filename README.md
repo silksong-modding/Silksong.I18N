@@ -4,7 +4,7 @@ A Hollow Knight: Silksong mod to enable developers to provide translated text ha
 
 ## Developer Usage
 
-This plugin does **not** need to be added as a reference. 
+This plugin does **not** need to be added as a reference, but **should** be specified as a `BepinDependency`.
 It obtains translations by scanning plugin directories for `language` folders.
 
 ### Creating Sheets
@@ -39,6 +39,7 @@ Sub-sheets will be named `Mod.me.mymod/<sub-sheet name>`.
 ```csharp
 
 [BepinAutoPlugin(id: "me.mymod")]
+[BepInDependency(DependencyGUID: "org.silksong-modding.i18n")]
 public partial class MyMod : BaseUnityPlugin
 {
     //...
