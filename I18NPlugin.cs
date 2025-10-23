@@ -13,37 +13,21 @@ using TeamCherry.Localization;
 
 namespace Silksong.I18N;
 
-[BepInPlugin("org.silksong-modding.i18n", "I18N", "0.1.0")]
+[BepInAutoPlugin("org.silksong-modding.i18n")]
 sealed partial class I18NPlugin : BaseUnityPlugin
 {
-    void Awake()
+    void Start()
     {
         I18NPlugin.Instance = this;
-        var harmony = new Harmony("SilksongModding.Localization");
-        var sceneLoaded = false;
-        UnityEngine.SceneManagement.SceneManager.sceneLoaded += (_, _) =>
-        {
-            if (!sceneLoaded)
-            {
-                sceneLoaded = true;
-                this.PatchOnSceneLoad(harmony);
-            }
-        };
+        new Harmony(I18NPlugin.Id).PatchAll(typeof(I18NPlugin));
+        Language.SwitchLanguage(Language.CurrentLanguage());
     }
 
     static I18NPlugin? Instance = null;
 
-    void PatchOnSceneLoad(Harmony harmony)
-    {
-        harmony.Patch(
-            original: AccessTools.Method(typeof(Language), nameof(Language.DoSwitch)),
-            postfix: new HarmonyMethod(typeof(I18NPlugin), nameof(I18NPlugin.PostfixSwitchLanguage))
-        );
-
-        Language.SwitchLanguage(Language.CurrentLanguage());
-    }
-
-    static void PostfixSwitchLanguage()
+    [HarmonyPatch(typeof(Language), nameof(Language.DoSwitch))]
+    [HarmonyPostfix]
+    static void OnLanguageSwitched()
     {
         var plugin = I18NPlugin.Instance;
         if (plugin)
