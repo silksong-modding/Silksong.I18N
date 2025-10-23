@@ -21,7 +21,7 @@ public class LanguagePatches
             string? targetLanguageFile = languageInfo.LanguageFiles
                 .FirstOrDefault(language =>
                     String.Equals(Path.GetFileNameWithoutExtension(language), newLangString,
-                        StringComparison.OrdinalIgnoreCase));
+                        StringComparison.InvariantCultureIgnoreCase));
 
             targetLanguageFile ??= languageInfo.FallbackFile;
 

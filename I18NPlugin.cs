@@ -42,7 +42,7 @@ public partial class I18NPlugin : BaseUnityPlugin
         foreach (var (id, info) in Chainloader.PluginInfos)
         {
             var pluginDir = Path.GetDirectoryName(info.Location);
-            if (pluginDir == Paths.PluginPath)
+            if (String.Equals(pluginDir, Paths.PluginPath, StringComparison.InvariantCultureIgnoreCase))
             {
                 Logger.LogWarning($"Ignoring '{id}' because it is not in its own subdirectory");
                 continue;
@@ -88,7 +88,7 @@ public partial class I18NPlugin : BaseUnityPlugin
                         Logger.LogError($"Failed to parse '{languageFileName}' from '{id}': {e.Message}");
                         continue;
                     }
-                    if (String.Equals(Path.GetFileNameWithoutExtension(languageFileName), fallbackLanguage, StringComparison.OrdinalIgnoreCase))
+                    if (String.Equals(Path.GetFileNameWithoutExtension(languageFileName), fallbackLanguage, StringComparison.InvariantCultureIgnoreCase))
                         fallbackFile = languageFileName;
                     languageFiles.Add(languageFileName);
                 }
