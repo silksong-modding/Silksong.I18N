@@ -143,7 +143,7 @@ sealed partial class I18NPlugin : BaseUnityPlugin
             return null;
         }
 
-        if (hit)
+        if (hit || fallback is not null)
         {
             return modSheet;
         }
