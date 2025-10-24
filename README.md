@@ -12,8 +12,8 @@ capitalization doesn't matter.
 
 The allowed languages are: `en.json` (English), `fr.json` (French), `de.json` (German), `zh.json`
 (Simplified Chinese), `es.json` (Spanish), `ko.json` (Korean), `ja.json` (Japanese), `it.json`
-(Italian), `pt.json` (Brazillian Portugese), and `ru.json` (Russian). You cannot translate a mod
-into a language that is not one of these codes.
+(Italian), `pt.json` (Brazillian Portugese), and `ru.json` (Russian). You cannot currently translate
+a mod into a language that is not one of these unless another mod provides support.
 
 To add your language to a mod, first you need to create your translation file. Copy one of the mod's
 `.json` language files (whichever has the most lines) and rename it to your language's two-letter
@@ -51,6 +51,18 @@ attribute to your mod's `BaseUnityPlugin` class:
 ```cs
 [BepInDependency("org.silksong-modding.i18n")]
 ```
+
+Additionally, if you're going to publish your mod on Thunderstore, you need to add this as a
+dependency in your mod's Thunderstore manifest. To do that, add the following like to your
+`thunderstore.toml` file after the `[package.dependencies]` definition:
+
+```toml
+silksong_modding-Silksong_I18N = "0.1.0"
+```
+
+Alternatively, if you don't have a `thunderstore.toml` file, you can add this as a dependency by
+adding `"silksong_modding-Silksong_I18N-0.1.0"` to the `dependencies` array in your Thunderstore
+`manifest.json` file.
 
 This mod does not need to be added to your project as a reference.
 
@@ -132,6 +144,41 @@ Then the keys `TRANSLATION_KEY` and `SOME_DIALOGUE` would be loaded from `en.jso
 It's **strongly recommended** that you never put the colon character (`:`) in any translation keys
 used by your mod, as users translating your mod could be confused by that if they don't know JSON
 and don't have JSON syntax highlighting in their text editor.
+
+#### Include Localized Text in Your Project File
+
+The Silksong plugin template does not currently have support for including localized text in the
+build output of your C# project. To add support, you'll need to edit a few lines in your `.csproj`
+file.
+
+First, update the `ItemGroup` containing `Binaries` items by adding
+`<Binaries Include="languages/*.json" Dir="languages" />` to it, like so:
+
+```xml
+<ItemGroup>
+  <Binaries Include="$(TargetPath)" />
+  <Binaries Include="$(TargetDir)/$(TargetName).pdb" />
+  <Binaries Include="languages/*.json" Dir="languages" />
+</ItemGroup>
+```
+
+Next, update the `Copy` task that copies the build output to your Silksong plugins directory by
+adding `/%(Binaries.Dir)` to its `DestinationFolder` attribute, like so:
+
+```xml
+<Copy
+  SourceFiles="@(Binaries)"
+  DestinationFolder="$(SilksongFolder)/BepInEx/plugins/$(TargetName)/%(Binaries.Dir)"
+  Condition="'$(SilksongFolder)' != '' And Exists('$(SilksongFolder)')"
+/>
+```
+
+Finally, update the second `Copy` task that copies the build output to the Thunderstore build
+directory by adding `/%(Binaries.Dir)` to its `DestinationFolder` attribute as well, like so:
+
+```xml
+<Copy SourceFiles="@(Binaries)" DestinationFolder="$(ThunderstoreDir)/tmp/%(Binaries.Dir)" />
+```
 
 ### Use Localized Text
 
