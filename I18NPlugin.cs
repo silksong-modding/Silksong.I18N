@@ -55,12 +55,11 @@ sealed partial class I18NPlugin : BaseUnityPlugin
                 continue;
             }
 
-            var isPluginsDir =
-                string.Compare(
-                    Path.GetFullPath(modDir).TrimEnd(Path.DirectorySeparatorChar),
-                    Path.GetFullPath(Paths.PluginPath).TrimEnd(Path.DirectorySeparatorChar),
-                    StringComparison.InvariantCultureIgnoreCase
-                ) == 0;
+            var isPluginsDir = string.Equals(
+                Path.GetFullPath(modDir).TrimEnd(Path.DirectorySeparatorChar),
+                Path.GetFullPath(Paths.PluginPath).TrimEnd(Path.DirectorySeparatorChar),
+                StringComparison.InvariantCultureIgnoreCase
+            );
 
             if (isPluginsDir)
             {
