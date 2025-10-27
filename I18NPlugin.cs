@@ -20,7 +20,7 @@ sealed partial class I18NPlugin : BaseUnityPlugin
     {
         I18NPlugin.Instance = this;
         new Harmony(I18NPlugin.Id).PatchAll(typeof(I18NPlugin));
-        Language.SwitchLanguage(Language.CurrentLanguage());
+        this.LoadAllModSheets();
     }
 
     static I18NPlugin? Instance = null;
@@ -63,7 +63,9 @@ sealed partial class I18NPlugin : BaseUnityPlugin
 
             if (isPluginsDir)
             {
-                this.Logger.LogWarning($"mod {id} installed directly in plugins dir");
+                this.Logger.LogInfo(
+                    $"mod {id} installed directly in plugins dir, not loading languages"
+                );
                 continue;
             }
 
