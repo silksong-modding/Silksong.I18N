@@ -12,46 +12,36 @@ public class LanguagePatches
     {
         foreach (var (modId, languageInfo) in I18NPlugin.LanguageData)
         {
+            var currentSheets = Language._currentEntrySheets;
+
             var language = languageInfo.Data.GetValueOrDefault(newLang);
-
-            var mainSheet = language?.MainSheet ?? new Dictionary<string, string>();
-            var subSheets = language?.SubSheets ?? new Dictionary<string, Dictionary<string, string>>();
-            var fallbackCode = languageInfo.FallbackLanguageCode;
-            if (fallbackCode != LanguageCode.N && fallbackCode != newLang)
+            if (language != null)
             {
-                var fallbackLanguage = languageInfo.Data[fallbackCode];
-                if (fallbackLanguage.MainSheet != null)
+                foreach (var (sheetTitle, sheet) in language)
                 {
-                    foreach (var (key, value) in fallbackLanguage.MainSheet)
-                    {
-                        mainSheet.TryAdd(key, value);
-                    }
+                    currentSheets.Add($"Mod.{modId}{sheetTitle}", sheet);
                 }
-
-                if (fallbackLanguage.SubSheets != null)
-                {
-                    foreach (var (subSheetTitle, fallbackSubSheet) in fallbackLanguage.SubSheets)
-                    {
-                        var subSheet = subSheets.GetValueOrDefault(subSheetTitle);
-                        if (subSheet == null)
-                        {
-                            subSheets.Add(subSheetTitle, fallbackSubSheet);
-                        }
-                        else
-                        {
-                            foreach (var (key, value) in fallbackSubSheet)
-                            {
-                                subSheet.TryAdd(key, value);
-                            }
-                        }
-                    }
-                }
-
             }
-            Language._currentEntrySheets.Add($"Mod.{modId}", mainSheet);
-            foreach (var (sheetTitle, subSheet) in subSheets)
+
+            var fallbackCode = languageInfo.FallbackLanguageCode;
+            if (fallbackCode == LanguageCode.N || fallbackCode == newLang)
+                continue;
+
+            var fallbackLanguage = languageInfo.Data[fallbackCode];
+            foreach (var (fallbackSheetTitle, fallbackSheet) in fallbackLanguage)
             {
-                Language._currentEntrySheets.Add($"Mod.{modId}/{sheetTitle}", subSheet);
+                var sheet = currentSheets.GetValueOrDefault(fallbackSheetTitle);
+                if (sheet == null)
+                {
+                    currentSheets.Add(fallbackSheetTitle, fallbackSheet);
+                }
+                else
+                {
+                    foreach (var (key, value) in fallbackSheet)
+                    {
+                        sheet.TryAdd(key, value);
+                    }
+                }
             }
         }
     }

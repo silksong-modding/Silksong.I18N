@@ -5,6 +5,6 @@ namespace Silksong.I18N;
 
 public class ModLanguageInfo
 {
-    public Dictionary<LanguageCode, ModLanguageData> Data = new();
+    public Dictionary<LanguageCode, Dictionary<string, Dictionary<string, string>>> Data = [];
     public LanguageCode FallbackLanguageCode = LanguageCode.N;
 }
