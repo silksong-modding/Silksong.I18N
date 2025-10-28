@@ -57,11 +57,11 @@ dependency in your mod's Thunderstore manifest. To do that, add the following li
 `thunderstore.toml` file after the `[package.dependencies]` definition:
 
 ```toml
-silksong_modding-Silksong_I18N = "0.1.0"
+silksong_modding-I18N = "0.1.0"
 ```
 
 Alternatively, if you don't have a `thunderstore.toml` file, you can add this as a dependency by
-adding `"silksong_modding-Silksong_I18N-0.1.0"` to the `dependencies` array in your Thunderstore
+adding `"silksong_modding-I18N-0.1.0"` to the `dependencies` array in your Thunderstore
 `manifest.json` file.
 
 This mod does not need to be added to your project as a reference.
@@ -74,11 +74,13 @@ by your mod.
 
 You can set your mod's default language directly from C# code by adding the
 `System.Resources.NeutralResourcesLanguage` attribute to your mod's assembly. To set your mod's
-default language to English, you could add the following attribute anywhere in your mod:
+default language to English, you could add the following attribute to your mod's source code:
 
 ```cs
 [assembly: System.Resources.NeutralResourcesLanguage("EN")]
 ```
+
+Anywhere in the C# code will work, but the recommended location is `Properties/AssemblyInfo.cs`.
 
 Alternatively, you can define the `NeutralLanguage` property in your mod's project file. To set your
 mod's default language to English, you could add the following to your project file:
@@ -177,7 +179,7 @@ Finally, update the second `Copy` task that copies the build output to the Thund
 directory by adding `/%(Binaries.Dir)` to its `DestinationFolder` attribute as well, like so:
 
 ```xml
-<Copy SourceFiles="@(Binaries)" DestinationFolder="$(ThunderstoreDir)/tmp/%(Binaries.Dir)" />
+<Copy SourceFiles="@(Binaries)" DestinationFolder="$(ThunderstoreDir)/temp/%(Binaries.Dir)" />
 ```
 
 ### Use Localized Text

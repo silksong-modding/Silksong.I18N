@@ -13,30 +13,24 @@ using TeamCherry.Localization;
 
 namespace Silksong.I18N;
 
-[BepInAutoPlugin("org.silksong-modding.i18n")]
-sealed partial class I18NPlugin : BaseUnityPlugin
+[BepInAutoPlugin(id: "org.silksong-modding.i18n")]
+internal sealed partial class I18NPlugin : BaseUnityPlugin
 {
-    void Start()
+    private void Start()
     {
-        I18NPlugin.Instance = this;
+        I18NPlugin._instance = this;
         new Harmony(I18NPlugin.Id).PatchAll(typeof(I18NPlugin));
         this.LoadAllModSheets();
     }
 
-    static I18NPlugin? Instance = null;
+    private static I18NPlugin? _instance = null;
+    private static I18NPlugin? Instance => I18NPlugin._instance ? I18NPlugin._instance : null;
 
     [HarmonyPatch(typeof(Language), nameof(Language.DoSwitch))]
     [HarmonyPostfix]
-    static void OnLanguageSwitched()
-    {
-        var plugin = I18NPlugin.Instance;
-        if (plugin)
-        {
-            plugin.LoadAllModSheets();
-        }
-    }
+    private static void OnLanguageSwitched() => I18NPlugin.Instance?.LoadAllModSheets();
 
-    void LoadAllModSheets()
+    private void LoadAllModSheets()
     {
         var lang = Language._currentLanguage;
         foreach (var (id, info) in Chainloader.PluginInfos)
@@ -73,6 +67,9 @@ sealed partial class I18NPlugin : BaseUnityPlugin
             var langAttr = modAsm.GetCustomAttribute<NeutralResourcesLanguageAttribute>();
             if (langAttr is not null)
             {
+                // We do effectively `.ToUpper().ToLower()` here to maintain semantic parity with
+                // the subsequent call to `LoadModSheet` and avoid making assumptions about the
+                // Unicode behavior of the `NeutralResourcesLanguageAttribute` string.
                 var fallbackLang = langAttr.CultureName.ToUpper();
                 fallbackSheet = this.LoadModSheet(modDir, fallbackLang.ToLower());
                 if (fallbackSheet is not null)
@@ -92,7 +89,7 @@ sealed partial class I18NPlugin : BaseUnityPlugin
         }
     }
 
-    Dictionary<string, string>? LoadModSheet(
+    private Dictionary<string, string>? LoadModSheet(
         string modDir,
         string lang,
         Dictionary<string, string>? fallback = null
@@ -131,7 +128,7 @@ sealed partial class I18NPlugin : BaseUnityPlugin
         }
         catch (Exception ex)
         {
-            this.Logger.LogWarning($"unable to load mod sheets: {modDir}\n{ex}");
+            this.Logger.LogError($"unable to load mod sheets: {modDir}\n{ex}");
             return null;
         }
 
@@ -145,7 +142,7 @@ sealed partial class I18NPlugin : BaseUnityPlugin
         }
     }
 
-    Dictionary<string, string>? ReadSheetFile(string path)
+    private Dictionary<string, string>? ReadSheetFile(string path)
     {
         try
         {
@@ -154,8 +151,42 @@ sealed partial class I18NPlugin : BaseUnityPlugin
         }
         catch (Exception ex)
         {
-            this.Logger.LogWarning($"unable to read language file: {path}\n{ex}");
+            this.Logger.LogError($"unable to read language file: {path}\n{ex}");
             return null;
+        }
+    }
+
+    [HarmonyPatch(typeof(Language), nameof(Language.Get), [typeof(string), typeof(string)])]
+    [HarmonyPostfix]
+    private static void OnGetLocalizedText(string? key, string? sheetTitle) =>
+        I18NPlugin.Instance?.CheckKeyExists(sheetTitle, key);
+
+#pragma warning disable Harmony003
+    [HarmonyPatch(typeof(LocalisedString), nameof(LocalisedString.ToString), [typeof(bool)])]
+    private static void OnGetLocalizedString(LocalisedString __instance, bool allowBlankText) =>
+        I18NPlugin.Instance?.CheckKeyExists(__instance.Sheet, __instance.Key, allowBlankText);
+#pragma warning restore Harmony003
+
+    private void CheckKeyExists(string? sheet, string? key, bool allowBlankText = true)
+    {
+        if (!string.IsNullOrEmpty(sheet) && !string.IsNullOrEmpty(key) && sheet.StartsWith("Mods."))
+        {
+            if (!Language.Has(key, sheet))
+            {
+                var lang = Language.CurrentLanguage();
+                var modId = sheet.Substring("Mods.".Length);
+                this.Logger.LogWarning($"language {lang} for mod {modId} missing: {key}");
+            }
+            else if (!allowBlankText)
+            {
+                var text = LocalisedString.ReplaceTags(Language.Get(key, sheet));
+                if (string.IsNullOrWhiteSpace(text))
+                {
+                    var lang = Language.CurrentLanguage();
+                    var modId = sheet.Substring("Mods.".Length);
+                    this.Logger.LogWarning($"language {lang} for mod {modId} is blank at: {key}");
+                }
+            }
         }
     }
 }
