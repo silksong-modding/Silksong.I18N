@@ -163,6 +163,7 @@ internal sealed partial class I18NPlugin : BaseUnityPlugin
 
 #pragma warning disable Harmony003
     [HarmonyPatch(typeof(LocalisedString), nameof(LocalisedString.ToString), [typeof(bool)])]
+    [HarmonyPostfix]
     private static void OnGetLocalizedString(LocalisedString __instance, bool allowBlankText) =>
         I18NPlugin.Instance?.CheckKeyExists(__instance.Sheet, __instance.Key, allowBlankText);
 #pragma warning restore Harmony003
