@@ -102,7 +102,7 @@ English and French:
 ```
 BepInEx/
     plugins/
-        Silksong.I18N/
+        silksong_modding-I18N/
             Silksong.I18N.dll
         YourName.YourModName/
             YourName.YourModName.dll
