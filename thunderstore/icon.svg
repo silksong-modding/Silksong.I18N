@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256">
+    <path fill="white" stroke="black" stroke-width="8" d="
+        M 240,208 H 80
+        A 32,32 90 0 1 48,176
+        V 80
+        A 32,32 90 0 1 80,48
+        H 176
+        A 32,32 90 0 1 208,80
+        V 176
+        A 32,32 90 0 0 240,208
+    "/>
+    <text
+         x="128" y="128" text-anchor="middle" dominant-baseline="middle"
+         font-size="48" font-weight="bold" font-family="Noto Sans"
+    >
+        I18N
+    </text>
+</svg>
