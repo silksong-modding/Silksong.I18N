@@ -159,16 +159,16 @@ internal sealed partial class I18NPlugin : BaseUnityPlugin
     [HarmonyPatch(typeof(Language), nameof(Language.Get), [typeof(string), typeof(string)])]
     [HarmonyPostfix]
     private static void OnGetLocalizedText(string? key, string? sheetTitle) =>
-        I18NPlugin.Instance?.CheckKeyExists(sheetTitle, key);
+        I18NPlugin.Instance?.WarnIfModKeyMissing(sheetTitle, key);
 
 #pragma warning disable Harmony003
     [HarmonyPatch(typeof(LocalisedString), nameof(LocalisedString.ToString), [typeof(bool)])]
     [HarmonyPostfix]
     private static void OnGetLocalizedString(LocalisedString __instance, bool allowBlankText) =>
-        I18NPlugin.Instance?.CheckKeyExists(__instance.Sheet, __instance.Key, allowBlankText);
+        I18NPlugin.Instance?.WarnIfModKeyMissing(__instance.Sheet, __instance.Key, allowBlankText);
 #pragma warning restore Harmony003
 
-    private void CheckKeyExists(string? sheet, string? key, bool allowBlankText = true)
+    private void WarnIfModKeyMissing(string? sheet, string? key, bool allowBlankText = true)
     {
         if (!string.IsNullOrEmpty(sheet) && !string.IsNullOrEmpty(key) && sheet.StartsWith("Mods."))
         {
