@@ -160,23 +160,23 @@ First, update the `ItemGroup` containing `Binaries` items by adding
 <ItemGroup>
   <Binaries Include="$(TargetPath)" />
   <Binaries Include="$(TargetDir)/$(TargetName).pdb" />
-  <Binaries Include="languages/*.json" Dir="languages" />
+  <Binaries Include="languages/*.json" PackDir="plugins/languages" />
 </ItemGroup>
 ```
 
 Next, update the `Copy` task that copies the build output to your Silksong plugins directory by
-adding `/%(Binaries.Dir)` to its `DestinationFolder` attribute, like so:
+adding `/%(Binaries.PackDir)` to its `DestinationFolder` attribute, like so:
 
 ```xml
 <Copy
   SourceFiles="@(Binaries)"
-  DestinationFolder="$(SilksongFolder)/BepInEx/plugins/$(TargetName)/%(Binaries.Dir)"
+  DestinationFolder="$(SilksongFolder)/BepInEx/plugins/thunderstore_username-$(AssemblyTitle)/%(Binaries.PackDir)"
   Condition="'$(SilksongFolder)' != '' And Exists('$(SilksongFolder)')"
 />
 ```
 
 Finally, update the second `Copy` task that copies the build output to the Thunderstore build
-directory by adding `/%(Binaries.Dir)` to its `DestinationFolder` attribute as well, like so:
+directory by adding `/%(Binaries.PackDir)` to its `DestinationFolder` attribute as well, like so:
 
 ```xml
 <Copy SourceFiles="@(Binaries)" DestinationFolder="$(ThunderstoreDir)/temp/%(Binaries.Dir)" />
