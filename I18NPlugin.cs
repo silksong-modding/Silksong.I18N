@@ -42,6 +42,16 @@ internal sealed partial class I18NPlugin : BaseUnityPlugin
             }
 
             var modAsm = mod.GetType().Assembly;
+            if (modAsm.Location.IsNullOrWhiteSpace())
+            {
+                this.Logger.LogDebug(
+                    $"mod {id} assembly has no location, "
+                        + $"if you are using ScriptEngine, "
+                        + $"please enable DumpedAssemblies of ScriptEngine "
+                        + $"and place the languages folder in BepInEx\\ScriptEngineDumpedAssemblies"
+                );
+                continue;
+            }
 
             var modDir = Path.GetDirectoryName(modAsm.Location);
             if (!Directory.Exists(modDir))
