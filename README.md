@@ -154,7 +154,7 @@ build output of your C# project. To add support, you'll need to edit a few lines
 file.
 
 First, update the `ItemGroup` containing `Binaries` items by adding
-`<Binaries Include="languages/*.json" Dir="languages" />` to it, like so:
+`<Binaries Include="languages/*.json" PackDir="plugins/languages" />` to it, like so:
 
 ```xml
 <ItemGroup>
@@ -179,7 +179,7 @@ Finally, update the second `Copy` task that copies the build output to the Thund
 directory by adding `/%(Binaries.PackDir)` to its `DestinationFolder` attribute as well, like so:
 
 ```xml
-<Copy SourceFiles="@(Binaries)" DestinationFolder="$(ThunderstoreDir)/temp/%(Binaries.Dir)" />
+<Copy SourceFiles="@(Binaries)" DestinationFolder="$(ThunderstoreDir)/temp/%(Binaries.PackDir)" />
 ```
 
 ### Use Localized Text
