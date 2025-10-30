@@ -42,7 +42,15 @@ internal sealed partial class I18NPlugin : BaseUnityPlugin
             }
 
             var modAsm = mod.GetType().Assembly;
-
+            if (modAsm.Location.IsNullOrWhiteSpace())
+            {
+                this.Logger.LogDebug($"mod {id} assembly has no location, " +
+                                     $"if you are using ScriptEngine, " +
+                                     $"please enable DumpedAssemblies of ScriptEngine " +
+                                     $"and place the languages folder in BepInEx\\ScriptEngineDumpedAssemblies");
+                continue;
+            }
+            
             var modDir = Path.GetDirectoryName(modAsm.Location);
             if (!Directory.Exists(modDir))
             {
@@ -81,8 +89,7 @@ internal sealed partial class I18NPlugin : BaseUnityPlugin
             }
 
             var sheet = this.LoadModSheet(modDir, lang.ToString().ToLower(), fallbackSheet);
-            if (sheet is not null)
-            {
+            if (sheet is not null) {
                 Language._currentEntrySheets[$"Mods.{id}"] = sheet;
                 this.Logger.LogDebug($"loaded sheet in language {lang} for mod {id}");
             }
@@ -101,8 +108,7 @@ internal sealed partial class I18NPlugin : BaseUnityPlugin
         var hit = false;
         var modSheet = fallback ?? new Dictionary<string, string>();
 
-        try
-        {
+        try {
             var modSheets = Directory
                 .EnumerateDirectories(modDir, "languages", opts)
                 .SelectMany(dir => Directory.EnumerateFiles(dir, $"{lang}.json", opts))
@@ -110,47 +116,36 @@ internal sealed partial class I18NPlugin : BaseUnityPlugin
                 .Select(this.ReadSheetFile)
                 .OfType<Dictionary<string, string>>();
 
-            foreach (var sheet in modSheets)
-            {
-                if (hit)
-                {
+            foreach (var sheet in modSheets) {
+                if (hit) {
                     this.Logger.LogWarning(
                         $"multiple casings found for language {lang.ToUpper()} in: {modDir}"
                     );
                 }
 
                 hit = true;
-                foreach (var (k, v) in sheet)
-                {
+                foreach (var (k, v) in sheet) {
                     modSheet[k] = v;
                 }
             }
-        }
-        catch (Exception ex)
-        {
+        } catch (Exception ex) {
             this.Logger.LogError($"unable to load mod sheets: {modDir}\n{ex}");
             return null;
         }
 
-        if (hit || fallback is not null)
-        {
+        if (hit || fallback is not null) {
             return modSheet;
-        }
-        else
-        {
+        } else {
             return null;
         }
     }
 
     private Dictionary<string, string>? ReadSheetFile(string path)
     {
-        try
-        {
+        try {
             using var s = new StreamReader(File.OpenRead(path), Encoding.UTF8, false);
             return JsonConvert.DeserializeObject<Dictionary<string, string>>(s.ReadToEnd());
-        }
-        catch (Exception ex)
-        {
+        } catch (Exception ex) {
             this.Logger.LogError($"unable to read language file: {path}\n{ex}");
             return null;
         }
@@ -170,19 +165,14 @@ internal sealed partial class I18NPlugin : BaseUnityPlugin
 
     private void WarnIfModKeyMissing(string? sheet, string? key, bool allowBlankText = true)
     {
-        if (!string.IsNullOrEmpty(sheet) && !string.IsNullOrEmpty(key) && sheet.StartsWith("Mods."))
-        {
-            if (!Language.Has(key, sheet))
-            {
+        if (!string.IsNullOrEmpty(sheet) && !string.IsNullOrEmpty(key) && sheet.StartsWith("Mods.")) {
+            if (!Language.Has(key, sheet)) {
                 var lang = Language.CurrentLanguage();
                 var modId = sheet.Substring("Mods.".Length);
                 this.Logger.LogWarning($"language {lang} for mod {modId} missing: {key}");
-            }
-            else if (!allowBlankText)
-            {
+            } else if (!allowBlankText) {
                 var text = LocalisedString.ReplaceTags(Language.Get(key, sheet));
-                if (string.IsNullOrWhiteSpace(text))
-                {
+                if (string.IsNullOrWhiteSpace(text)) {
                     var lang = Language.CurrentLanguage();
                     var modId = sheet.Substring("Mods.".Length);
                     this.Logger.LogWarning($"language {lang} for mod {modId} is blank at: {key}");
