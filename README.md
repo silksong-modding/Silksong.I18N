@@ -149,38 +149,25 @@ and don't have JSON syntax highlighting in their text editor.
 
 #### Include Localized Text in Your Project File
 
-The Silksong plugin template does not currently have support for including localized text in the
-build output of your C# project. To add support, you'll need to edit a few lines in your `.csproj`
-file.
-
-First, update the `ItemGroup` containing `Binaries` items by adding
-`<Binaries Include="languages/*.json" PackDir="plugins/languages" />` to it, like so:
+To add your localized text to your mod package, you will have to update your `.csproj` file.
+Locate the `ItemGroup` containing `Binaries` items and edit it to include your language files, like so:
 
 ```xml
 <ItemGroup>
-  <Binaries Include="$(TargetPath)" />
-  <Binaries Include="$(TargetDir)/$(TargetName).pdb" />
-  <Binaries Include="languages/*.json" PackDir="plugins/languages" />
+  <Binaries Include="$(TargetPath)" LocalDir="/" PackDir="/" />
+  <Binaries Include="$(TargetDir)/$(TargetName).pdb" LocalDir="/" PackDir="/" />
+  <!-- this line is new -->
+  <Binaries Include="languages/*.json" LocalDir="languages" PackDir="plugins/languages" />
 </ItemGroup>
 ```
+`LocalDir` is where the file will be copied when installing your mod locally as a post-build step. `PackDir`
+is where the file will be copied in the Thunderstore package. Due to Thunderstore installation rules, these
+will generally be different when you want a nested directory in your installed package (such as here).
 
-Next, update the `Copy` task that copies the build output to your Silksong plugins directory by
-adding `/%(Binaries.PackDir)` to its `DestinationFolder` attribute, like so:
-
-```xml
-<Copy
-  SourceFiles="@(Binaries)"
-  DestinationFolder="$(SilksongFolder)/BepInEx/plugins/thunderstore_username-$(AssemblyTitle)/%(Binaries.PackDir)"
-  Condition="'$(SilksongFolder)' != '' And Exists('$(SilksongFolder)')"
-/>
-```
-
-Finally, update the second `Copy` task that copies the build output to the Thunderstore build
-directory by adding `/%(Binaries.PackDir)` to its `DestinationFolder` attribute as well, like so:
-
-```xml
-<Copy SourceFiles="@(Binaries)" DestinationFolder="$(ThunderstoreDir)/temp/%(Binaries.PackDir)" />
-```
+If you created your mod with an older version of the Silksong plugin template, you will also need to update
+the Copy targets to handle the `LocalDir` and `PackDir` properties. You can reference a more updated version
+of the [template](https://github.com/silksong-modding/Silksong.Modding.Templates/blob/61ab392917e46cb272ed1c38ee27cd4b79c91754/Silksong.Modding.Templates/content/SilksongPlugin/Silksong.Plugin.1.csproj#L57-L75)
+to see the necessary changes.
 
 ### Use Localized Text
 
