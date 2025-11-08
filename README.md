@@ -150,23 +150,29 @@ and don't have JSON syntax highlighting in their text editor.
 #### Include Localized Text in Your Project File
 
 To add your localized text to your mod package, you will have to update your `.csproj` file.
-Locate the `ItemGroup` containing `Binaries` items and edit it to include your language files, like so:
+Locate the `ItemGroup` containing `Binaries` items and edit it to include your language files by
+adding a new entry for `languages/*.json`. Additionally, edit the `PackDir` properties on each entry
+to all start with `plugins/$(TargetName)`. The result should look like this:
 
 ```xml
 <ItemGroup>
-  <Binaries Include="$(TargetPath)" LocalDir="/" PackDir="/" />
-  <Binaries Include="$(TargetDir)/$(TargetName).pdb" LocalDir="/" PackDir="/" />
-  <!-- this line is new -->
-  <Binaries Include="languages/*.json" LocalDir="languages" PackDir="plugins/languages" />
+  <!-- Replace `PackDir="/"` with `PackDir="plugins/$(TargetName)"`: -->
+  <Binaries Include="$(TargetPath)" LocalDir="/" PackDir="plugins/$(TargetName)" />
+  <Binaries Include="$(TargetDir)/$(TargetName).pdb" LocalDir="/" PackDir="plugins/$(TargetName)" />
+  <!-- Add this line: -->
+  <Binaries Include="languages/*.json" LocalDir="languages" PackDir="plugins/$(TargetName)/languages" />
 </ItemGroup>
 ```
-`LocalDir` is where the file will be copied when installing your mod locally as a post-build step. `PackDir`
-is where the file will be copied in the Thunderstore package. Due to Thunderstore installation rules, these
-will generally be different when you want a nested directory in your installed package (such as here).
 
-If you created your mod with an older version of the Silksong plugin template, you will also need to update
-the Copy targets to handle the `LocalDir` and `PackDir` properties. You can reference a more updated version
-of the [template](https://github.com/silksong-modding/Silksong.Modding.Templates/blob/61ab392917e46cb272ed1c38ee27cd4b79c91754/Silksong.Modding.Templates/content/SilksongPlugin/Silksong.Plugin.1.csproj#L57-L75)
+`LocalDir` is where the file will be copied when installing your mod locally as a post-build step.
+`PackDir` is where the file will be copied in the Thunderstore package. Due to Thunderstore
+installation rules, these will generally be different when you want a nested directory in your
+installed package (such as here).
+
+If you created your mod with an older version of the Silksong plugin template, you will also need to
+update the Copy targets to handle the `LocalDir` and `PackDir` properties. You can reference a more
+updated version of the
+[template](https://github.com/silksong-modding/Silksong.Modding.Templates/blob/61ab392917e46cb272ed1c38ee27cd4b79c91754/Silksong.Modding.Templates/content/SilksongPlugin/Silksong.Plugin.1.csproj#L57-L75)
 to see the necessary changes.
 
 ### Use Localized Text
