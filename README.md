@@ -152,15 +152,15 @@ and don't have JSON syntax highlighting in their text editor.
 To add your localized text to your mod package, you will have to update your `.csproj` file.
 Locate the `ItemGroup` containing `Binaries` items and edit it to include your language files by
 adding a new entry for `languages/*.json`. Additionally, edit the `PackDir` properties on each entry
-to all start with `plugins/$(TargetName)`. The result should look like this:
+to all start with `plugins`. The result should look like this:
 
 ```xml
 <ItemGroup>
-  <!-- Replace `PackDir="/"` with `PackDir="plugins/$(TargetName)"`: -->
-  <Binaries Include="$(TargetPath)" LocalDir="/" PackDir="plugins/$(TargetName)" />
-  <Binaries Include="$(TargetDir)/$(TargetName).pdb" LocalDir="/" PackDir="plugins/$(TargetName)" />
+  <!-- Replace `PackDir="/"` with `PackDir="plugins"`: -->
+  <Binaries Include="$(TargetPath)" LocalDir="/" PackDir="plugins" />
+  <Binaries Include="$(TargetDir)/$(TargetName).pdb" LocalDir="/" PackDir="plugins" />
   <!-- Add this line: -->
-  <Binaries Include="languages/*.json" LocalDir="languages" PackDir="plugins/$(TargetName)/languages" />
+  <Binaries Include="languages/*.json" LocalDir="languages" PackDir="plugins/languages" />
 </ItemGroup>
 ```
 
