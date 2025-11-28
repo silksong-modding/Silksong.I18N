@@ -57,11 +57,11 @@ dependency in your mod's Thunderstore manifest. To do that, add the following li
 `thunderstore.toml` file after the `[package.dependencies]` definition:
 
 ```toml
-silksong_modding-I18N = "0.1.0"
+silksong_modding-I18N = "1.0.2"
 ```
 
 Alternatively, if you don't have a `thunderstore.toml` file, you can add this as a dependency by
-adding `"silksong_modding-I18N-0.1.0"` to the `dependencies` array in your Thunderstore
+adding `"silksong_modding-I18N-1.0.2"` to the `dependencies` array in your Thunderstore
 `manifest.json` file.
 
 This mod does not need to be added to your project as a reference.
