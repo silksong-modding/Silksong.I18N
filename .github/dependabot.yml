@@ -2,10 +2,10 @@ version: 2
 registries:
   nuget-public:
     type: nuget-feed
-    url: api.nuget.org
+    url: https://api.nuget.org/v3/index.json
   bepinex:
     type: nuget-feed
-    url: nuget.bepinex.dev
+    url: https://nuget.bepinex.dev/v3/index.json
 updates:
   - directory: /
     package-ecosystem: nuget
