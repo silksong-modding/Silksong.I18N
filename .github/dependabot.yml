@@ -1,4 +1,11 @@
-version: 2    
+version: 2
+registries:
+  nuget-public:
+    type: nuget-feed
+    url: api.nuget.org
+  bepinex:
+    type: nuget-feed
+    url: nuget.bepinex.dev
 updates:
   - directory: /
     package-ecosystem: nuget
@@ -8,6 +15,9 @@ updates:
       - dependency-name: UnityEngine.Modules
     schedule:
       interval: daily
+    registries:
+      - nuget-public
+      - bepinex 
   - directory: /
     package-ecosystem: github-actions
     schedule:
