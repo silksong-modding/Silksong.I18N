@@ -32,9 +32,9 @@
       },
       "Harmonize": {
         "type": "Direct",
-        "requested": "[1.0.2, )",
-        "resolved": "1.0.2",
-        "contentHash": "lb7Gh9HSf8a/A+eEJqcRe2TDbTV/pnJUph3FXkmVmkbzvKtP4ekM6S0ly8FcP2/VQ33Ht3QpB/SDDx87FSLOaw=="
+        "requested": "[1.0.5, )",
+        "resolved": "1.0.5",
+        "contentHash": "wRA1i6hDNM8NZy40FBVp1xawpfnJdSt/GXGe/mVtzbq8jDN+aa5eY0TxZ13p8SvvIwPDxIK50firGNsq/9+8hQ=="
       },
       "HarmonyX": {
         "type": "Direct",
@@ -55,8 +55,8 @@
       "Silksong.GameLibs": {
         "type": "Direct",
         "requested": "[*-*, )",
-        "resolved": "1.1.0-silksong1.0.29315",
-        "contentHash": "HHAt52uzuBXi8cn90/D7WC7YEptcW9yST5fo43lThzRaN6d/TLiXhy7d1Cv3UyACTnryKqINSYPqa2hSbLR+Qg=="
+        "resolved": "1.2.0-silksong1.0.29315",
+        "contentHash": "MwcUC0FMUn7aCwYHWgQegOBxNGgNBDie9nfg0GeodqbnfrHOjUZ06sZjq+0Iiz9/WBL8yd511YZujFS91FgVMw=="
       },
       "UnityEngine.Modules": {
         "type": "Direct",
