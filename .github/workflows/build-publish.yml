@@ -51,13 +51,15 @@ jobs:
     - name: Upload thunderstore artifact
       uses: actions/upload-artifact@v7
       with:
-        name: mod-bundle
-        path: thunderstore/dist
+        id: mod-bundle
+        path: thunderstore/dist/*.zip
+        archive: false
     - name: Upload nuget artifact
       uses: actions/upload-artifact@v7
       with:
-        name: nuget
-        path: nuget/
+        id: nuget
+        path: nuget/*.nupkg
+        archive: false
     - name: Check if release needed
       id: needs-release
       uses: mukunku/tag-exists-action@v1.7.0
@@ -66,7 +68,7 @@ jobs:
         tag: v${{ steps.version.outputs.version }}
     - name: Generate attestation
       id: attest
-      uses: actions/attest-build-provenance@v4
+      uses: actions/attest@v4
       if: github.event_name == 'push' && steps.needs-release.outputs.exists == 'false'
       with:
         subject-path: |
@@ -104,8 +106,9 @@ jobs:
     - name: Download artifact
       uses: actions/download-artifact@v8
       with:
-        name: mod-bundle
+        id: mod-bundle
         path: thunderstore/dist
+        skip-decompress: true
     - name: Publish to Thunderstore
       if: env.THUNDERSTORE_API_KEY != ''
       run: |-
@@ -142,7 +145,7 @@ jobs:
     - name: Download artifact
       uses: actions/download-artifact@v8
       with:
-        name: nuget
+        id: nuget
         path: nuget/
     - name: Publish to NuGet
       if: env.NUGET_API_KEY != ''
