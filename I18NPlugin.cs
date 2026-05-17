@@ -16,7 +16,9 @@ using TeamCherry.Localization;
 namespace Silksong.I18N;
 
 [BepInAutoPlugin(id: "org.silksong-modding.i18n")]
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 public sealed partial class I18NPlugin : BaseUnityPlugin
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 {
     private void Start()
     {
@@ -47,6 +49,12 @@ public sealed partial class I18NPlugin : BaseUnityPlugin
     private ConfigEntry<bool>? useLanguageOverride;
     private ConfigEntry<SupportedLanguages>? languageOverride;
 
+    /// <summary>
+    /// The language used by I18N for modded text.
+    /// </summary>
+    /// <remarks>
+    /// If this property returns null, then the base game language (see <see cref="Language.CurrentLanguage"/>) will be used.
+    /// </remarks>
     public LanguageCode? LanguageOverride
     {
         get
