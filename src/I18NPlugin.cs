@@ -66,6 +66,9 @@ public sealed partial class I18NPlugin : BaseUnityPlugin
         }
     }
 
+    /// <summary>
+    /// Boolean value indicating whether or not the modded language is overriding the base game language.
+    /// </summary>
     public bool UseLanguageOverride =>
         useLanguageOverride is not null ? useLanguageOverride.Value : false;
 }
