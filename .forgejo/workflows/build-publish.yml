@@ -1,0 +1,129 @@
+name: Build
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+    inputs:
+      force_thunderstore:
+        description: Force re-publishing to Thunderstore
+        required: true
+        default: false
+        type: boolean
+      force_nuget:
+        description: Force re-publishing to NuGet
+        required: true
+        default: false
+        type: boolean
+    
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      allow-release: 'true'
+      is-new-version: ${{ !fromJSON(steps.needs-release.outputs.exists || 'true') }}
+
+    steps:
+    - uses: https://code.forgejo.org/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+    - name: Setup .NET
+      uses: https://github.com/actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+      with:
+        dotnet-version: 9.x
+    - name: Build
+      run: dotnet build -c Release --verbosity normal
+    - name: Get Version
+      id: version
+      run: |-
+        VERSION=$(dotnet build src/Silksong.I18N.csproj -getProperty:Version)
+        echo Version is $VERSION
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+    - name: Upload thunderstore artifact
+      uses: https://code.forgejo.org/forgejo/upload-artifact@cb8afe72b42edc798abfb8fcb556cf660d894245 # v5
+      with:
+        name: thunderstore
+        path: thunderstore/dist/*.zip
+        if-no-files-found: error
+    - name: Check if release needed
+      id: needs-release
+      if: forgejo.event_name == 'push'
+      env:
+        TAG: v${{ steps.version.outputs.version }}
+      run: |
+        set +e
+        git ls-remote --exit-code --tags origin "refs/tags/$TAG" > /dev/null
+        rc=$?
+        set -e
+        case $rc in
+          0) echo "exists=true" >> "$FORGEJO_OUTPUT" ;;
+          2) echo "exists=false" >> "$FORGEJO_OUTPUT" ;;
+          *) echo "git ls-remote failed with exit code $rc"; exit $rc ;;
+        esac
+
+  # Publish to Thunderstore to that users can install it
+  release-thunderstore:
+    needs:
+      - build
+    runs-on: ubuntu-latest
+    if: |
+      (
+        github.event_name == 'push' &&
+        needs.build.outputs.allow-release == 'true' &&
+        needs.build.outputs.is-new-version == 'true'
+      ) ||
+      (
+        github.event_name == 'workflow_dispatch' &&
+        github.event.inputs.force_thunderstore == 'true'
+      )
+    # Do not substitute your Thunderstore API key in this workflow! Instead, add a secret to your repository.
+    # https://forgejo.org/docs/latest/user/actions/secrets/
+    env:
+      THUNDERSTORE_API_KEY: ${{ secrets.THUNDERSTORE_API_KEY }}
+
+    steps:
+    - uses: https://code.forgejo.org/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+    - name: Setup .NET
+      uses: https://github.com/actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+      with:
+        dotnet-version: 9.x
+    - name: Restore tools
+      run: dotnet tool restore
+    - name: Download artifact
+      uses: https://code.forgejo.org/forgejo/download-artifact@769f970437aa3291b13f35dc23fc87967d7fb19f # v7
+      with:
+        name: thunderstore
+        path: thunderstore/dist
+    - name: Publish to Thunderstore
+      if: env.THUNDERSTORE_API_KEY != ''
+      run: |-
+        dotnet tcli publish \
+          --config-path thunderstore/thunderstore.toml \
+          --file thunderstore/dist/*.zip \
+          --token $THUNDERSTORE_API_KEY
+
+  # Publish to Forgejo releases to keep release history on the repository (needed for this workflow to work properly,
+  # since the release tag is how it detects new versions, but is also nice for multiple other reasons)
+  release-forgejo:
+    needs:
+      - build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && needs.build.outputs.allow-release == 'true' && needs.build.outputs.is-new-version == 'true'
+
+    steps:
+    - name: Download artifact
+      uses: https://code.forgejo.org/forgejo/download-artifact@769f970437aa3291b13f35dc23fc87967d7fb19f # v7
+      with:
+        name: thunderstore
+        path: thunderstore/dist
+    - name: Release
+      uses: https://code.forgejo.org/actions/forgejo-release@98265452477dafb3f0f27ba9c462c90b18cb44fd # v2.13.4
+      with:
+        direction: upload
+        tag: v${{ needs.build.outputs.version }}
+        # Uploads every file in this directory; it only holds the downloaded Thunderstore zip.
+        release-dir: thunderstore/dist
